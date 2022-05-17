@@ -163,6 +163,19 @@ var (
 			Name:  FlagPromoteNamespaceWithAlias,
 			Usage: "Promote local namespace to global namespace",
 		},
+		// Test arguments
+		&cli.StringFlag{
+			Name:  "region",
+			Usage: "region",
+		},
+		&cli.StringFlag{
+			Name:  "container",
+			Usage: "container",
+		},
+		&cli.StringFlag{
+			Name:  "arn",
+			Usage: "arn",
+		},
 	}
 
 	describeNamespaceFlags = []cli.Flag{

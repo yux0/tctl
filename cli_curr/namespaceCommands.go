@@ -28,6 +28,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/temporalio/tctl/api/enums/v1"
+	"github.com/temporalio/tctl/api/persistence/v1"
+	"go.temporal.io/server/common/persistence/serialization"
 	"os"
 	"strconv"
 
@@ -220,6 +223,34 @@ func (d *namespaceCLIImpl) UpdateNamespace(c *cli.Context) {
 				ErrorAndExit("Namespace data format is invalid.", err)
 			}
 		}
+		//Test data
+		if c.IsSet("container") {
+			region := c.String("region")
+			arn := c.String("arn")
+			container := c.String("container")
+			if len(region) == 0 || len(arn) == 0 || len(container) == 0 {
+				ErrorAndExit("not enough test data", nil)
+			}
+			storageMetadata := &persistence.NamespaceStorageMetadata{RegionalStorageMetadata: map[string]*persistence.NamespaceStorageRegionalMetadata{
+				region: {
+					Provider: enums.STORAGE_PROVIDER_AWS_S3,
+					Metadata: &persistence.NamespaceStorageRegionalMetadata_AwsS3Metadata{
+						AwsS3Metadata: &persistence.AWSS3Metadata{
+							Region:        region,
+							Container:     container,
+							AssumeRoleArn: arn,
+						},
+					},
+				},
+			}}
+			data, err := serialization.ProtoEncodeBlob(storageMetadata, enumspb.ENCODING_TYPE_PROTO3)
+			if err != nil {
+				ErrorAndExit("fail to encode test data", nil)
+			}
+			namespaceData["__temporal-storage-region"] = region
+			namespaceData["__temporal-storage-metadata"] = string(data.GetData())
+		}
+
 		if c.IsSet(FlagRetention) {
 			retention, err = timestamp.ParseDurationDefaultDays(c.String(FlagRetention))
 			if err != nil {
